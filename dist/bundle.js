@@ -60754,8 +60754,12 @@ class BaseModule {
         img.src = this.FAVICON_URL;
 
         a.appendChild(img);
-        a.appendChild(document.createTextNode(rating.toPrecision(2)));
-
+        try {
+            a.appendChild(document.createTextNode(rating.toPrecision(2)));
+        }
+        catch {
+            a.appendChild(document.createTextNode(rating));
+        }
         return a;
     }
 
