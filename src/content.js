@@ -12,7 +12,7 @@ async function updateCards() {
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         for (const extension of extensions) {
             const insert = await extension.getInsert(mangabakaId)
-            const list = card.querySelector('.ratings-list.flex.flex-row.flex-wrap.gap-2.pt-1');
+            const list = card.querySelector('.ratings-list');
             list.append(insert);
         }
     }
