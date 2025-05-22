@@ -60448,13 +60448,13 @@ for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__[
 }
 
 async function updateCards() {
-    const cards = document.querySelectorAll('.rounded-lg.border.bg-card.text-card-foreground.shadow-sm.p-0:not(.modified)');
+    const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');
     for (const card of cards) {
         card.classList.add("modified")
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
             const insert = await extension.getInsert(mangabakaId)
-            const list = card.querySelector('.ratings-list.flex.flex-row.flex-wrap.gap-2.pt-1');
+            const list = card.querySelector('.ratings-list');
             list.append(insert);
         }
     }
@@ -60515,7 +60515,7 @@ if (thisPage.endsWith("/merge")) {
                 cardStaff = cardStaff.map(name => name.replace(/\s*\(.*?\)/, ""));
 
                 const overlapScore = (overlapOfTitles(baseTitles, cardTitles) + overlapOfTitles(baseStaff, cardStaff)) / 2;
-                card.querySelector(".mod-header").innerHTML = overlapScore;
+                card.querySelector(".mod-header").innerHTML = `Confidence: ${overlapScore.toPrecision(2)}`;
             } catch (e) {
                 console.error("Failed to fetch or process card series:", e);
             }
@@ -60563,6 +60563,7 @@ observer.observe(document.body, {
 });
 
 await updateCards();
+
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } }, 1);
 
