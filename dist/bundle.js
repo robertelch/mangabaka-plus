@@ -60515,7 +60515,7 @@ if (thisPage.endsWith("/merge")) {
                 cardStaff = cardStaff.map(name => name.replace(/\s*\(.*?\)/, ""));
 
                 const overlapScore = (overlapOfTitles(baseTitles, cardTitles) + overlapOfTitles(baseStaff, cardStaff)) / 2;
-                card.querySelector(".mod-header").innerHTML = `Confidence: ${overlapScore.toPrecision(2)}`;
+                card.querySelector(".mod-header").innerHTML = `Confidence: ${overlapScore.toPrecision(3)}%`;
             } catch (e) {
                 console.error("Failed to fetch or process card series:", e);
             }
