@@ -6,13 +6,13 @@ for (const extension of extensions) {
 }
 
 async function updateCards() {
-    const cards = document.querySelectorAll('.rounded-lg.border.bg-card.text-card-foreground.shadow-sm.p-0:not(.modified)');
+    const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');
     for (const card of cards) {
         card.classList.add("modified")
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         for (const extension of extensions) {
             const insert = await extension.getInsert(mangabakaId)
-            const list = card.querySelector('.ratings-list.flex.flex-row.flex-wrap.gap-2.pt-1');
+            const list = card.querySelector('.ratings-list');
             list.append(insert);
         }
     }
