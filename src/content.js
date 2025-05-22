@@ -6,7 +6,7 @@ for (const extension of extensions) {
 }
 
 async function updateCards() {
-    const cards = document.querySelectorAll('.rounded-lg.border.bg-card.text-card-foreground.shadow-sm.p-0:not(.modified)');
+    const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');
     for (const card of cards) {
         card.classList.add("modified")
         const mangabakaId = card.getAttribute('data-mangabaka-id');
