@@ -1,6 +1,6 @@
 import extensions from "./site-extensions/barrel.js";
 import customPages from "./custom-pages/barrel.js"
-
+console.log(extensions)
 for (const extension of extensions) {
     await extension.init()
 }
@@ -12,8 +12,16 @@ async function updateCards() {
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         for (const extension of extensions) {
             const insert = await extension.getInsert(mangabakaId)
-            const list = card.querySelector('.ratings-list');
-            list.append(insert);
+            if (insert){
+                const list = card.querySelector('.ratings-list');
+                const insertId = insert.getAttribute('data-insert-id');
+                if (insertId) {
+                    if (list.querySelector(`[data-insert-id="${insertId}"]`)) {
+                        continue;
+                    }
+                }
+                list.append(insert);
+            }
         }
     }
 }

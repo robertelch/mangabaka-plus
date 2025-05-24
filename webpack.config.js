@@ -1,12 +1,12 @@
 const path = require('path');
 
 module.exports = {
-  mode: 'development',             // or 'development' for unminified
-  entry: './src/content.js',      // your main JS file
+  mode: 'development',            
+  entry: './src/content.js',     
   output: {
-    filename: 'bundle.js',        // output filename
-    path: path.resolve(__dirname, 'dist'),  // output folder
+    filename: 'bundle.js',       
+    path: path.resolve(__dirname, 'dist'),  
   },
   target: 'web',
-  devtool: 'source-map',                  // target environment
+  devtool: 'source-map',                  
 };

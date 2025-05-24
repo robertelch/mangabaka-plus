@@ -4,12 +4,16 @@ export default class BaseModule {
 
     static async getInsert(mb_id) {
         const siteId = this._getSiteId(mb_id);
-        const rating = await this._getRating(siteId);
-        return this._getInsertPrivate(siteId, rating);
+        if (siteId){
+            const rating = await this._getRating(siteId);
+            return this._getInsertPrivate(siteId, rating);
+        }
+        return false
     }
 
     static _getInsertPrivate(id, rating) {
         const a = document.createElement('a');
+        a.dataset.insertId = `${this.constructor.name}-${id}`;
         a.className = "custom-insert ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-3 py-1";
         a.href = this._makeLink(id);
         a.target = "_blank";

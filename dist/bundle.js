@@ -60442,7 +60442,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./custom-pages/barrel.js */ "./src/custom-pages/barrel.js");
 
 
-
+console.log(_site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"])
 for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
     await extension.init()
 }
@@ -60454,8 +60454,16 @@ async function updateCards() {
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
             const insert = await extension.getInsert(mangabakaId)
-            const list = card.querySelector('.ratings-list');
-            list.append(insert);
+            if (insert){
+                const list = card.querySelector('.ratings-list');
+                const insertId = insert.getAttribute('data-insert-id');
+                if (insertId) {
+                    if (list.querySelector(`[data-insert-id="${insertId}"]`)) {
+                        continue;
+                    }
+                }
+                list.append(insert);
+            }
         }
     }
 }
@@ -60641,6 +60649,37 @@ class SettingsPage extends _base__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 /***/ }),
 
+/***/ "./src/site-extensions/Comick/comick.js":
+/*!**********************************************!*\
+  !*** ./src/site-extensions/Comick/comick.js ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Comick)
+/* harmony export */ });
+/* harmony import */ var _base_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base.js */ "./src/site-extensions/base.js");
+
+
+class Comick extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+
+    static FAVICON_URL = "https://comick.io/favicon.ico"
+
+    static _makeLink(id) {
+        return `https://comick.io/comic/${id}`
+    }
+
+    static async _getRating(id) {
+        console.log(id)
+        return "-"
+        // removed by dead control flow
+{}
+    }
+}
+
+/***/ }),
+
 /***/ "./src/site-extensions/barrel.js":
 /*!***************************************!*\
   !*** ./src/site-extensions/barrel.js ***!
@@ -60652,9 +60691,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var _bato_bato__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./bato/bato */ "./src/site-extensions/bato/bato.js");
+/* harmony import */ var _Comick_comick__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Comick/comick */ "./src/site-extensions/Comick/comick.js");
 
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ([_bato_bato__WEBPACK_IMPORTED_MODULE_0__["default"]]);
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ([_bato_bato__WEBPACK_IMPORTED_MODULE_0__["default"], _Comick_comick__WEBPACK_IMPORTED_MODULE_1__["default"]]);
 
 /***/ }),
 
@@ -60674,12 +60715,16 @@ class BaseModule {
 
     static async getInsert(mb_id) {
         const siteId = this._getSiteId(mb_id);
-        const rating = await this._getRating(siteId);
-        return this._getInsertPrivate(siteId, rating);
+        if (siteId){
+            const rating = await this._getRating(siteId);
+            return this._getInsertPrivate(siteId, rating);
+        }
+        return false
     }
 
     static _getInsertPrivate(id, rating) {
         const a = document.createElement('a');
+        a.dataset.insertId = `${this.constructor.name}-${id}`;
         a.className = "custom-insert ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-3 py-1";
         a.href = this._makeLink(id);
         a.target = "_blank";
