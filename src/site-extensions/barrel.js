@@ -1,3 +1,4 @@
-import BatoTo from "./BatoTo/bato"
+import BatoTo from "./bato/bato"
+import Comick from "./Comick/comick"
 
-export default [BatoTo]
+export default [BatoTo, Comick]
