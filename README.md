@@ -1,1 +1,1 @@
-Build into /dist with `npx webpack`
+Build into /dist with `npm run build`
