@@ -1,4 +1,4 @@
-import BasePage from "./base"
+import BasePage from "../base"
 
 export default class SettingsPage extends BasePage {
     static SIDEBAR_ICON = "wrench"

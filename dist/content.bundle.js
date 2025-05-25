@@ -60442,10 +60442,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./custom-pages/barrel.js */ "./src/custom-pages/barrel.js");
 
 
-
+console.log(_site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"])
 for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
     await extension.init()
 }
+console.log("HELLO???")
 
 async function updateCards() {
     const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');
@@ -60454,8 +60455,16 @@ async function updateCards() {
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
             const insert = await extension.getInsert(mangabakaId)
-            const list = card.querySelector('.ratings-list');
-            list.append(insert);
+            if (insert){
+                const list = card.querySelector('.ratings-list');
+                const insertId = insert.getAttribute('data-insert-id');
+                if (insertId) {
+                    if (list.querySelector(`[data-insert-id="${insertId}"]`)) {
+                        continue;
+                    }
+                }
+                list.append(insert);
+            }
         }
     }
 }
@@ -60517,7 +60526,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./settings */ "./src/custom-pages/settings.js");
+/* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./settings */ "./src/custom-pages/settings/index.js");
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ([_settings__WEBPACK_IMPORTED_MODULE_0__["default"]]);
@@ -60579,17 +60588,17 @@ class BasePage {
 
 /***/ }),
 
-/***/ "./src/custom-pages/settings.js":
-/*!**************************************!*\
-  !*** ./src/custom-pages/settings.js ***!
-  \**************************************/
+/***/ "./src/custom-pages/settings/index.js":
+/*!********************************************!*\
+  !*** ./src/custom-pages/settings/index.js ***!
+  \********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (/* binding */ SettingsPage)
 /* harmony export */ });
-/* harmony import */ var _base__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./base */ "./src/custom-pages/base.js");
+/* harmony import */ var _base__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base */ "./src/custom-pages/base.js");
 
 
 class SettingsPage extends _base__WEBPACK_IMPORTED_MODULE_0__["default"] {
@@ -60641,10 +60650,10 @@ class SettingsPage extends _base__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 /***/ }),
 
-/***/ "./src/site-extensions/BatoTo/bato.js":
-/*!********************************************!*\
-  !*** ./src/site-extensions/BatoTo/bato.js ***!
-  \********************************************/
+/***/ "./src/site-extensions/BatoTo/index.js":
+/*!*********************************************!*\
+  !*** ./src/site-extensions/BatoTo/index.js ***!
+  \*********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
@@ -60687,6 +60696,146 @@ class BatoTo extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 /***/ }),
 
+/***/ "./src/site-extensions/Comick/index.js":
+/*!*********************************************!*\
+  !*** ./src/site-extensions/Comick/index.js ***!
+  \*********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ Comick)
+/* harmony export */ });
+/* harmony import */ var _base_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base.js */ "./src/site-extensions/base.js");
+
+
+class Comick extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+
+    static FAVICON_URL = "https://comick.io/favicon.ico"
+
+    static _makeLink(id) {
+        return `https://comick.io/comic/${id}`
+    }
+
+    static async _getRating(id) {
+        return "-"
+    }
+}
+
+/***/ }),
+
+/***/ "./src/site-extensions/MangaFire/index.js":
+/*!************************************************!*\
+  !*** ./src/site-extensions/MangaFire/index.js ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ MangaFire)
+/* harmony export */ });
+/* harmony import */ var _base_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base.js */ "./src/site-extensions/base.js");
+
+
+class MangaFire extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+
+    static FAVICON_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAdVBMVEVHcEwva5pteYc1ea1AUWU4gLfv7/H09fd+n7zs7/Hb3eA3frU3frTf4OM5hb////82fbQrY5AuapozdaopXIYkUXchSWwdQF4jVn8wcKINLk0HO2IAFTfX3eMWZp1ulrkHRnNwhZq4xNCms8GSm6VSaoOXp7drI841AAAADnRSTlMA+P3x/a2s/iH6V2NaYJ45aqEAAAFaSURBVDiNfZOJ0oIgEIC3UtH/aE1NlEO83/8RWyGT7PhGYY8PcJwBAOLw/IEwBuJ3VzV+8kfr052Q+IU0hjB9xuDZT0M4rWGeDjmNA/a5J5wgf9DrhkaDdnoA9Ro1DA0lzbNwgHqlQcQ8qzNjao8DZCu0A2LaUJBt+MKlJwGN3yYOcNlYtsC5ujwBxSMsMnxjQLFRGWuYyqsV4GettsZEtWoTHFc7dFZgbVV17b0BV0s7uQndZ7Rt37eu4wSpu9LOiTOk1DiVTigJOWNX2oA5oaOzBmlLTkAc5T2wLBvNd4ETE5UEzWLADV5yekg4Ss4p15Mo/X5HZUkvCKSVPe4ZaUfR0QgBDkJM+75WXHAxUg84MiXUXggE9cVMASj9ThALik4+glKBEnwv9IpYqgGgHiY1vnykHo+2yGD5d4y9CCsJRB97lgji7wJd3/9v/Z/lesdRwt6SRLT+BljISDd+iC7CAAAAAElFTkSuQmCC"
+
+    static _makeLink(id) {
+        return id
+    }
+
+    static async _getRating(id) {
+        return "-"
+    }
+}
+
+/***/ }),
+
+/***/ "./src/site-extensions/MangaFox/index.js":
+/*!***********************************************!*\
+  !*** ./src/site-extensions/MangaFox/index.js ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ MangaFox)
+/* harmony export */ });
+/* harmony import */ var _base_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base.js */ "./src/site-extensions/base.js");
+
+
+class MangaFox extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+
+    static FAVICON_URL = "https://fanfox.net/favicon.ico"
+
+    static _makeLink(id) {
+        return id
+    }
+
+    static async _getRating(id) {
+        return "-"
+    }
+}
+
+/***/ }),
+
+/***/ "./src/site-extensions/MangaNato/index.js":
+/*!************************************************!*\
+  !*** ./src/site-extensions/MangaNato/index.js ***!
+  \************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ MangaNato)
+/* harmony export */ });
+/* harmony import */ var _base_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base.js */ "./src/site-extensions/base.js");
+
+
+class MangaNato extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+
+    static FAVICON_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgBAMAAACBVGfHAAAAJ1BMVEV7xMZ+xcjoVU3wXFXJ5un+/v7yvrmm1dflbWjqop/mmY/q+Pn529bytDNAAAAAAXRSTlP9g+pWxwAAAN1JREFUeAGt0DVCg0EQhuFd3NlF+z9e4nR4HX3jDdbj9JEDYAfAavwARM4Vd+nybfeszYyQlZhWyhFSl9MAxdUIJZG645XlLm8UooQ2LRt1UAM+abL6TXW4RpuSxGsgDjg3nnipwx/bRpajOsCXAakayALYG2ER3Fbw1GAAAhaywSqoca59yehTyFQBMc88p6F3fxXUgW8cvMloBZT6CwxAykK8egX3MNxbea2AxKUh7iBVgWE+1Z/ftImndmJbXQdXlrNVELcFLPzgqD6qRHmEy01DXmmfei9BlFKDPEOSWUk7OMQdAAAAAElFTkSuQmCC"
+
+    static _makeLink(id) {
+        return id
+    }
+
+    static async _getRating(id) {
+        return "-"
+    }
+}
+
+/***/ }),
+
+/***/ "./src/site-extensions/MangaReader/index.js":
+/*!**************************************************!*\
+  !*** ./src/site-extensions/MangaReader/index.js ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ MangaReader)
+/* harmony export */ });
+/* harmony import */ var _base_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base.js */ "./src/site-extensions/base.js");
+
+
+class MangaReader extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+
+    static FAVICON_URL = "https://mangareader.to/favicon.ico?v=0.1"
+
+    static _makeLink(id) {
+        return id
+    }
+
+    static async _getRating(id) {
+        return "-"
+    }
+}
+
+/***/ }),
+
 /***/ "./src/site-extensions/barrel.js":
 /*!***************************************!*\
   !*** ./src/site-extensions/barrel.js ***!
@@ -60697,10 +60846,20 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _BatoTo_bato__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BatoTo/bato */ "./src/site-extensions/BatoTo/bato.js");
+/* harmony import */ var _MangaReader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MangaReader */ "./src/site-extensions/MangaReader/index.js");
+/* harmony import */ var _MangaNato__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./MangaNato */ "./src/site-extensions/MangaNato/index.js");
+/* harmony import */ var _MangaFox__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./MangaFox */ "./src/site-extensions/MangaFox/index.js");
+/* harmony import */ var _MangaFire__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./MangaFire */ "./src/site-extensions/MangaFire/index.js");
+/* harmony import */ var _Comick__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Comick */ "./src/site-extensions/Comick/index.js");
+/* harmony import */ var _BatoTo__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./BatoTo */ "./src/site-extensions/BatoTo/index.js");
 
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ([_BatoTo_bato__WEBPACK_IMPORTED_MODULE_0__["default"]]);
+
+
+
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ([_MangaReader__WEBPACK_IMPORTED_MODULE_0__["default"],_MangaNato__WEBPACK_IMPORTED_MODULE_1__["default"],_MangaFox__WEBPACK_IMPORTED_MODULE_2__["default"],_MangaFire__WEBPACK_IMPORTED_MODULE_3__["default"],_Comick__WEBPACK_IMPORTED_MODULE_4__["default"],_BatoTo__WEBPACK_IMPORTED_MODULE_5__["default"]]);
 
 /***/ }),
 
@@ -60720,12 +60879,16 @@ class BaseModule {
 
     static async getInsert(mb_id) {
         const siteId = this._getSiteId(mb_id);
-        const rating = await this._getRating(siteId);
-        return this._getInsertPrivate(siteId, rating);
+        if (siteId){
+            const rating = await this._getRating(siteId);
+            return this._getInsertPrivate(siteId, rating);
+        }
+        return false
     }
 
     static _getInsertPrivate(id, rating) {
         const a = document.createElement('a');
+        a.dataset.insertId = `${this.constructor.name}-${id}`;
         a.className = "custom-insert ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-3 py-1";
         a.href = this._makeLink(id);
         a.target = "_blank";
@@ -60766,7 +60929,7 @@ class BaseModule {
     }
 
     static async init() {
-        const jsonURL = chrome.runtime.getURL(`./${this.name}.json`); 
+        const jsonURL = chrome.runtime.getURL(`./${this.name}.data.json`); 
         const res = await fetch(jsonURL);
         this.data = await res.json();
     }

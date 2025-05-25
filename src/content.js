@@ -4,9 +4,7 @@ console.log(extensions)
 for (const extension of extensions) {
     await extension.init()
 }
-chrome.runtime.sendMessage({ action: 'fetchData' }, response => {
-  console.log('Received data:', response);
-});
+console.log("HELLO???")
 
 async function updateCards() {
     const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');

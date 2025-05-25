@@ -1,3 +1,3 @@
-import SettingsPage from "./settings"
+import settings from "./settings"
 
-export default [SettingsPage]
+export default [settings]

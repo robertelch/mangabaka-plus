@@ -54,7 +54,7 @@ export default class BaseModule {
     }
 
     static async init() {
-        const jsonURL = chrome.runtime.getURL(`./${this.name}.json`); 
+        const jsonURL = chrome.runtime.getURL(`./${this.name}.data.json`); 
         const res = await fetch(jsonURL);
         this.data = await res.json();
     }

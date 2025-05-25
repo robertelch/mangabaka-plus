@@ -9,12 +9,6 @@ export default class Comick extends BaseModule {
     }
 
     static async _getRating(id) {
-        console.log(id)
         return "-"
-        if (id) {
-            const res = await fetch(`https://api.comick.fun/comic/${id}`)
-            const data = await res.json();
-            return data.comic?.bayesian_rating ?? "-";
-        }
     }
 }

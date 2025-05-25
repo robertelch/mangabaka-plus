@@ -17,18 +17,13 @@
       "js": [
         "content.bundle.js"
       ],
-      "css": [
-        "style.css"
-      ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
       "resources": [
-        "data.json",
-        "*.json",
-        "BatoTo.reader.bundle.js"
+        "*.json"
       ],
       "matches": [
         "https://mangabaka.dev/*"
