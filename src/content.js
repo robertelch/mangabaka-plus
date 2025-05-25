@@ -4,6 +4,7 @@ console.log(extensions)
 for (const extension of extensions) {
     await extension.init()
 }
+console.log("HELLO???")
 
 async function updateCards() {
     const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');
