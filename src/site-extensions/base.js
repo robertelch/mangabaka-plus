@@ -43,6 +43,12 @@ export default class BaseModule {
         return this.data.find(item => item.mangabaka == mb_id)?.siteId;
     }
 
+    static async openReader(mb_id) {
+        const siteId = this._getSiteId(mb_id)
+        const reader = chrome.runtime.getURL(`./reader.html`);
+        chrome.tabs.create({ url: reader, active: true });
+    }
+
     static async init() {
         const jsonURL = chrome.runtime.getURL(`./${this.name}.json`); 
         const res = await fetch(jsonURL);

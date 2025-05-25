@@ -4,6 +4,9 @@ import customPages from "./custom-pages/barrel.js"
 for (const extension of extensions) {
     await extension.init()
 }
+chrome.runtime.sendMessage({ action: 'fetchData' }, response => {
+  console.log('Received data:', response);
+});
 
 async function updateCards() {
     const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');

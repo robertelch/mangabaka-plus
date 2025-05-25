@@ -1,3 +1,3 @@
-import BatoTo from "./bato/bato"
+import BatoTo from "./BatoTo/bato"
 
 export default [BatoTo]

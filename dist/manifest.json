@@ -3,20 +3,36 @@
   "name": "JSON Search Injector",
   "version": "1.0",
   "description": "Injects content and searches JSON",
-  "host_permissions": ["https://mangabaka.dev/*"],
-  "permissions": ["tabs"],
+  "host_permissions": [
+    "https://mangabaka.dev/*"
+  ],
+  "permissions": [
+    "tabs"
+  ],
   "content_scripts": [
     {
-      "matches": ["https://mangabaka.dev/*"],
-      "js": ["bundle.js"],
-      "css": ["style.css"],
+      "matches": [
+        "https://mangabaka.dev/*"
+      ],
+      "js": [
+        "content.bundle.js"
+      ],
+      "css": [
+        "style.css"
+      ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["data.json","*.json"],
-      "matches": ["https://mangabaka.dev/*"]
+      "resources": [
+        "data.json",
+        "*.json",
+        "BatoTo.reader.bundle.js"
+      ],
+      "matches": [
+        "https://mangabaka.dev/*"
+      ]
     }
   ]
 }
