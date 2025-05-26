@@ -1,10 +1,9 @@
 import extensions from "./site-extensions/barrel.js";
 import customPages from "./custom-pages/barrel.js"
-console.log(extensions)
+
 for (const extension of extensions) {
     await extension.init()
 }
-console.log("HELLO???")
 
 async function updateCards() {
     const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');
@@ -12,16 +11,18 @@ async function updateCards() {
         card.classList.add("modified")
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         for (const extension of extensions) {
-            const insert = await extension.getInsert(mangabakaId)
-            if (insert){
-                const list = card.querySelector('.ratings-list');
-                const insertId = insert.getAttribute('data-insert-id');
-                if (insertId) {
-                    if (list.querySelector(`[data-insert-id="${insertId}"]`)) {
-                        continue;
+            const inserts = await extension.getInserts(mangabakaId)
+            for (const insert of inserts) {
+                if (insert){
+                    const list = card.querySelector('.ratings-list');
+                    const insertId = insert.getAttribute('data-insert-id');
+                    if (insertId) {
+                        if (list.querySelector(`[data-insert-id="${insertId}"]`)) {
+                            continue;
+                        }
                     }
+                    list.append(insert);
                 }
-                list.append(insert);
             }
         }
     }
