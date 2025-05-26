@@ -60442,11 +60442,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./custom-pages/barrel.js */ "./src/custom-pages/barrel.js");
 
 
-console.log(_site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"])
+
 for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
     await extension.init()
 }
-console.log("HELLO???")
 
 async function updateCards() {
     const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');
@@ -60454,16 +60453,18 @@ async function updateCards() {
         card.classList.add("modified")
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
-            const insert = await extension.getInsert(mangabakaId)
-            if (insert){
-                const list = card.querySelector('.ratings-list');
-                const insertId = insert.getAttribute('data-insert-id');
-                if (insertId) {
-                    if (list.querySelector(`[data-insert-id="${insertId}"]`)) {
-                        continue;
+            const inserts = await extension.getInserts(mangabakaId)
+            for (const insert of inserts) {
+                if (insert){
+                    const list = card.querySelector('.ratings-list');
+                    const insertId = insert.getAttribute('data-insert-id');
+                    if (insertId) {
+                        if (list.querySelector(`[data-insert-id="${insertId}"]`)) {
+                            continue;
+                        }
                     }
+                    list.append(insert);
                 }
-                list.append(insert);
             }
         }
     }
@@ -60877,13 +60878,16 @@ class BaseModule {
 
     static FAVICON_URL = "https://example.com"
 
-    static async getInsert(mb_id) {
-        const siteId = this._getSiteId(mb_id);
-        if (siteId){
-            const rating = await this._getRating(siteId);
-            return this._getInsertPrivate(siteId, rating);
+    static async getInserts(mb_id) {
+        const siteIds = this._getSiteIds(mb_id);
+        const result = []
+        if (siteIds){
+            for (const id of siteIds) {
+                const rating = await this._getRating(id);
+                result.push(this._getInsertPrivate(id, rating));
+            }
         }
-        return false
+        return result
     }
 
     static _getInsertPrivate(id, rating) {
@@ -60918,8 +60922,8 @@ class BaseModule {
         throw new Error(`${this.constructor.name} must implement getRating(id)`);
     }
 
-    static _getSiteId(mb_id) {
-        return this.data.find(item => item.mangabaka == mb_id)?.siteId;
+    static _getSiteIds(mb_id) {
+        return this.data[mb_id];
     }
 
     static async openReader(mb_id) {

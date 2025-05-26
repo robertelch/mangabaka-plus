@@ -2,13 +2,16 @@ export default class BaseModule {
 
     static FAVICON_URL = "https://example.com"
 
-    static async getInsert(mb_id) {
-        const siteId = this._getSiteId(mb_id);
-        if (siteId){
-            const rating = await this._getRating(siteId);
-            return this._getInsertPrivate(siteId, rating);
+    static async getInserts(mb_id) {
+        const siteIds = this._getSiteIds(mb_id);
+        const result = []
+        if (siteIds){
+            for (const id of siteIds) {
+                const rating = await this._getRating(id);
+                result.push(this._getInsertPrivate(id, rating));
+            }
         }
-        return false
+        return result
     }
 
     static _getInsertPrivate(id, rating) {
@@ -43,8 +46,8 @@ export default class BaseModule {
         throw new Error(`${this.constructor.name} must implement getRating(id)`);
     }
 
-    static _getSiteId(mb_id) {
-        return this.data.find(item => item.mangabaka == mb_id)?.siteId;
+    static _getSiteIds(mb_id) {
+        return this.data[mb_id];
     }
 
     static async openReader(mb_id) {
