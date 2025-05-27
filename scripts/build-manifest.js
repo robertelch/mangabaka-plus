@@ -34,7 +34,7 @@ const manifest = {
   "version": "1.0",
   "description": "Injects content and searches JSON",
   "host_permissions": ["https://mangabaka.dev/*"],
-  "permissions": ["tabs"],
+  "permissions": ["tabs","storage"],
   "content_scripts": [
     {
       "matches": ["https://mangabaka.dev/*"],

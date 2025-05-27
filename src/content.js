@@ -1,5 +1,16 @@
 import extensions from "./site-extensions/barrel.js";
 import customPages from "./custom-pages/barrel.js"
+console.log("HELLO?")
+chrome.storage.local.get("preferences", (result) => {
+    if (!result.preferences) {
+        const preferences = {}
+        for (const extension of extensions) {
+            preferences[extension.name] = true
+        }
+        chrome.storage.local.set({ preferences: preferences })
+    }
+});
+console.log("HELL2O?")
 
 for (const extension of extensions) {
     await extension.init()
@@ -37,7 +48,7 @@ async function checkForSpecials() {
         contentWrapper.classList.add("injected");
         const matchedPage = customPages.find(page => page.CHECK_EX.test(currentURL));
         if (matchedPage) {
-            contentWrapper.innerHTML = matchedPage.getPage();
+            contentWrapper.innerHTML = await matchedPage.getPage();
             await matchedPage.prepStuff(contentWrapper);
         }
     }
@@ -58,7 +69,7 @@ const observer = new MutationObserver(() => {
         for (const page of customPages) {
             page.insertSidebar(sidebar)
         }
-        checkForSpecials();
+        //checkForSpecials();
         updateCards();
     }, 100);
 });
@@ -69,3 +80,63 @@ observer.observe(document.body, {
 });
 
 await updateCards();
+
+const script = document.createElement('script');
+script.textContent = `
+
+(function() {
+  const pushState = history.pushState;
+  history.pushState = function(...args) {
+    pushState.apply(history, args);
+    window.dispatchEvent(new Event('locationchange'));
+    window.postMessage({ type: 'LOCATION_CHANGE', href: window.location.href }, '*');
+  };
+
+  const replaceState = history.replaceState;
+  history.replaceState = function(...args) {
+    replaceState.apply(history, args);
+    window.dispatchEvent(new Event('locationchange'));
+    window.postMessage({ type: 'LOCATION_CHANGE', href: window.location.href }, '*');
+  };
+
+  window.addEventListener('popstate', () => {
+    window.dispatchEvent(new Event('locationchange'));
+    window.postMessage({ type: 'LOCATION_CHANGE', href: window.location.href }, '*');
+  });
+})();
+
+`;
+(document.head || document.documentElement).appendChild(script);
+script.remove();
+window.addEventListener('message', async (event) => {
+  if (event.source !== window) return;
+
+  if (event.data && event.data.type === 'LOCATION_CHANGE') {
+    console.log('Content script received URL change:', event.data.href);
+    await onUrlChange(event.data.href);
+  }
+});
+
+async function onUrlChange(newUrl) {
+    const contentWrapper = document.body.querySelector(".content-wrapper.svelte-eg0xkf");
+    if (!contentWrapper.classList.contains("injected")) {
+        contentWrapper.classList.add("injected");
+        const wrapper = document.createElement("div");
+        wrapper.id = "injectionWrapper";
+        contentWrapper.parentElement.appendChild(wrapper);
+    }
+    const injectionWrapper = document.body.querySelector("#injectionWrapper")
+    if (contentWrapper) {
+        const matchedPage = customPages.find(page => page.CHECK_EX.test(newUrl));
+        if (matchedPage) {
+            contentWrapper.hidden = true
+            injectionWrapper.hidden = false
+            injectionWrapper.innerHTML = await matchedPage.getPage();
+            await matchedPage.prepStuff(injectionWrapper);
+        }
+        else {
+            contentWrapper.hidden = false
+            injectionWrapper.hidden = true
+        }
+    }
+}

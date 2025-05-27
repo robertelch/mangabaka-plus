@@ -60442,6 +60442,17 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./custom-pages/barrel.js */ "./src/custom-pages/barrel.js");
 
 
+console.log("HELLO?")
+chrome.storage.local.get("preferences", (result) => {
+    if (!result.preferences) {
+        const preferences = {}
+        for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
+            preferences[extension.name] = true
+        }
+        chrome.storage.local.set({ preferences: preferences })
+    }
+});
+console.log("HELL2O?")
 
 for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
     await extension.init()
@@ -60479,7 +60490,7 @@ async function checkForSpecials() {
         contentWrapper.classList.add("injected");
         const matchedPage = _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"].find(page => page.CHECK_EX.test(currentURL));
         if (matchedPage) {
-            contentWrapper.innerHTML = matchedPage.getPage();
+            contentWrapper.innerHTML = await matchedPage.getPage();
             await matchedPage.prepStuff(contentWrapper);
         }
     }
@@ -60500,7 +60511,7 @@ const observer = new MutationObserver(() => {
         for (const page of _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"]) {
             page.insertSidebar(sidebar)
         }
-        checkForSpecials();
+        //checkForSpecials();
         updateCards();
     }, 100);
 });
@@ -60511,6 +60522,66 @@ observer.observe(document.body, {
 });
 
 await updateCards();
+
+const script = document.createElement('script');
+script.textContent = `
+
+(function() {
+  const pushState = history.pushState;
+  history.pushState = function(...args) {
+    pushState.apply(history, args);
+    window.dispatchEvent(new Event('locationchange'));
+    window.postMessage({ type: 'LOCATION_CHANGE', href: window.location.href }, '*');
+  };
+
+  const replaceState = history.replaceState;
+  history.replaceState = function(...args) {
+    replaceState.apply(history, args);
+    window.dispatchEvent(new Event('locationchange'));
+    window.postMessage({ type: 'LOCATION_CHANGE', href: window.location.href }, '*');
+  };
+
+  window.addEventListener('popstate', () => {
+    window.dispatchEvent(new Event('locationchange'));
+    window.postMessage({ type: 'LOCATION_CHANGE', href: window.location.href }, '*');
+  });
+})();
+
+`;
+(document.head || document.documentElement).appendChild(script);
+script.remove();
+window.addEventListener('message', async (event) => {
+  if (event.source !== window) return;
+
+  if (event.data && event.data.type === 'LOCATION_CHANGE') {
+    console.log('Content script received URL change:', event.data.href);
+    await onUrlChange(event.data.href);
+  }
+});
+
+async function onUrlChange(newUrl) {
+    const contentWrapper = document.body.querySelector(".content-wrapper.svelte-eg0xkf");
+    if (!contentWrapper.classList.contains("injected")) {
+        contentWrapper.classList.add("injected");
+        const wrapper = document.createElement("div");
+        wrapper.id = "injectionWrapper";
+        contentWrapper.parentElement.appendChild(wrapper);
+    }
+    const injectionWrapper = document.body.querySelector("#injectionWrapper")
+    if (contentWrapper) {
+        const matchedPage = _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"].find(page => page.CHECK_EX.test(newUrl));
+        if (matchedPage) {
+            contentWrapper.hidden = true
+            injectionWrapper.hidden = false
+            injectionWrapper.innerHTML = await matchedPage.getPage();
+            await matchedPage.prepStuff(injectionWrapper);
+        }
+        else {
+            contentWrapper.hidden = false
+            injectionWrapper.hidden = true
+        }
+    }
+}
 
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } }, 1);
@@ -60560,19 +60631,31 @@ class BasePage {
     }
 
     static insertSidebar(sidebar) {
-        let confirm = sidebar.querySelector(`#${this.PAGE_LINK}`)
-        if(!confirm) {
-            let customSettings = `
-            <li data-sidebar="menu-sub-item">
-                <a id="${this.PAGE_LINK}" href="https://mangabaka.dev/${this.PAGE_LINK}" class="text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground [&>svg]:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground text-sm group-data-[collapsible=icon]:hidden"
-                data-sidebar="menu-sub-button" data-size="md" data-active="false">
-                    <i data-lucide="${this.SIDEBAR_ICON}"></i>
-                    ${this.SIDEBAR_NAME}
-                </a>
-            </li>
-            `;
-            sidebar.innerHTML += customSettings
-            ;(0,lucide__WEBPACK_IMPORTED_MODULE_0__.createIcons)({ icons: lucide__WEBPACK_IMPORTED_MODULE_1__ })
+        let confirm = sidebar.querySelector(`#${this.PAGE_LINK}`);
+        if (!confirm) {
+            const li = document.createElement('li');
+            li.setAttribute('data-sidebar', 'menu-sub-item');
+
+            const a = document.createElement('a');
+            a.id = this.PAGE_LINK;
+            a.href = `https://mangabaka.dev/${this.PAGE_LINK}`;
+            a.className = `text-sidebar-foreground ring-sidebar-ring hover:bg-sidebar-accent hover:text-sidebar-accent-foreground active:bg-sidebar-accent active:text-sidebar-accent-foreground [&>svg]:text-sidebar-accent-foreground flex h-7 min-w-0 -translate-x-px items-center gap-2 overflow-hidden rounded-md px-2 outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground text-sm group-data-[collapsible=icon]:hidden`;
+            a.setAttribute('onclick', "event.preventDefault(); history.pushState(null, '', this.href);");
+            a.setAttribute('data-sidebar', 'menu-sub-button');
+            a.setAttribute('data-size', 'md');
+            a.setAttribute('data-active', 'false');
+
+            const icon = document.createElement('i');
+            icon.setAttribute('data-lucide', this.SIDEBAR_ICON);
+
+            a.appendChild(icon);
+            a.append(this.SIDEBAR_NAME); // Assumes this.SIDEBAR_NAME is a string. If it's HTML, use `innerHTML` carefully or `innerText`.
+
+            li.appendChild(a);
+            sidebar.appendChild(li);
+
+            (0,lucide__WEBPACK_IMPORTED_MODULE_0__.createIcons)({ icons: lucide__WEBPACK_IMPORTED_MODULE_1__ });
+
         }
     }
     static getPage() {
@@ -60600,51 +60683,73 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (/* binding */ SettingsPage)
 /* harmony export */ });
 /* harmony import */ var _base__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base */ "./src/custom-pages/base.js");
+/* harmony import */ var _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../site-extensions/barrel.js */ "./src/site-extensions/barrel.js");
 
 
 class SettingsPage extends _base__WEBPACK_IMPORTED_MODULE_0__["default"] {
+
     static SIDEBAR_ICON = "wrench"
     static SIDEBAR_NAME = "MangaBaka+ Settings"
     static PAGE_LINK = "mbps"
-    static getPage() {
-        let bato = localStorage.getItem("bato-toggle");
-        let res = bato == "false" ? "" : "checked";
 
-        return `<div class="px-2 py-4 sm:px-4">
-        <h1 class="py-4 text-xl font-semibold sm:text-2xl">MangaBaka+ Settings</h1>
-        <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
-            <div class="p-4">
+    static getPage() {
+    return new Promise((resolve) => {
+        chrome.storage.local.get("preferences", (result) => {
+        const preferences = result.preferences || {};
+        const checkboxes = [];
+
+        for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+            console.log("A")
+            const isChecked = preferences[extension.name] !== false ? "checked" : "";
+            const id = `${extension.name}-toggle`;
+
+            const checkbox = `
+            <li>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                <input type="checkbox" id="${id}" name="${id}" style="transform: scale(1.2);" ${isChecked}>
+                <label for="${id}" style="font-size: 20px;">${extension.name}</label>
+                </div>
+            </li>
+            `;
+            checkboxes.push(checkbox);
+        }
+
+        const html = `
+            <div class="px-2 py-4 sm:px-4">
+            <h1 class="py-4 text-xl font-semibold sm:text-2xl">MangaBaka+ Settings</h1>
+            <div class="rounded-lg border bg-card text-card-foreground shadow-sm">
+                <div class="p-4">
                 <div class="prose">
                     <h3 class="text-base">Manga Sources</h3>
                     <ul class="list-outside list-disc" style="list-style-type: none; padding: 0; margin: 0;">
-                        <li>
-    <div style="display: flex; align-items: center; gap: 8px;">
-    <input type="checkbox" id="bato-toggle" name="bato-toggle" style="transform: scale(1.2);" ${res}>
-    <label for="bato-toggle" style="font-size: 20px;">bato.to</label>
-    </div>
-
-                        </li>
+                    ${checkboxes.join("")}
                     </ul>
-
                 </div>
                 <div class="text-right">
-    <button id="save-mbp" class="ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 py-1">
-        <!---->Save
-        <!---->
-    </button>
+                    <button id="save-mbp" class="ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3 py-1">
+                    Save
+                    </button>
+                </div>
+                </div>
             </div>
             </div>
+        `;
 
-        </div>
-    </div>`
+        resolve(html);
+        });
+    });
     }
+
 
 
     static async prepStuff(contentWrapper) {
         let save = contentWrapper.querySelector("#save-mbp")
         save.addEventListener('click', () => {
-            let bato = contentWrapper.querySelector("#bato-toggle")
-            localStorage.setItem("bato-toggle", String(bato.checked))
+            const storage = {}
+            for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+                storage[extension.name] = contentWrapper.querySelector(`#${extension.name}-toggle`).checked
+            }
+            chrome.storage.local.set({ preferences: storage });
         });
     }
 }
@@ -60884,34 +60989,42 @@ class BaseModule {
         if (siteIds){
             for (const id of siteIds) {
                 const rating = await this._getRating(id);
-                result.push(this._getInsertPrivate(id, rating));
+                const insert = await this._getInsertPrivate(id, rating)
+                result.push(insert);
             }
         }
         return result
     }
 
-    static _getInsertPrivate(id, rating) {
-        const a = document.createElement('a');
-        a.dataset.insertId = `${this.constructor.name}-${id}`;
-        a.className = "custom-insert ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-3 py-1";
-        a.href = this._makeLink(id);
-        a.target = "_blank";
-        a.rel = "noopener noreferrer";
-        a.title = `Open on ${this.constructor.name}`;
+    static async _getInsertPrivate(id, rating) {
+        return new Promise((resolve) => {
+            chrome.storage.local.get("preferences", (result) => {
+                if (result.preferences[this.name]) {
+                    const a = document.createElement('a');
+                    a.dataset.insertId = `${name}-${id}`;
+                    a.className = "custom-insert ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-3 py-1";
+                    a.href = this._makeLink(id);
+                    a.target = "_blank";
+                    a.rel = "noopener noreferrer";
+                    a.title = `Open on ${name}`;
 
-        const img = document.createElement('img');
-        img.className = "mr-1 size-5 bg-[_152232]";
-        img.alt = "Bato";
-        img.src = this.FAVICON_URL;
+                    const img = document.createElement('img');
+                    img.className = "mr-1 size-5 bg-[_152232]";
+                    img.alt = "Bato";
+                    img.src = this.FAVICON_URL;
 
-        a.appendChild(img);
-        try {
-            a.appendChild(document.createTextNode(rating.toPrecision(2)));
-        }
-        catch {
-            a.appendChild(document.createTextNode(rating));
-        }
-        return a;
+                    a.appendChild(img);
+                    try {
+                        a.appendChild(document.createTextNode(rating.toPrecision(2)));
+                    } catch {
+                        a.appendChild(document.createTextNode(rating));
+                    }
+                    resolve(a);
+                } else {
+                    resolve(false);
+                }
+            });
+        });
     }
 
     static _makeLink(id) {
