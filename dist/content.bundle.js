@@ -60442,26 +60442,33 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./custom-pages/barrel.js */ "./src/custom-pages/barrel.js");
 
 
-console.log("HELLO?")
+
+// Add preferences to object if not preexisting
 chrome.storage.local.get("preferences", (result) => {
-    if (!result.preferences) {
-        const preferences = {}
-        for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
+    const preferences = {}
+    for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
+        if (result.preferences[extension.name] == undefined) {
             preferences[extension.name] = true
         }
-        chrome.storage.local.set({ preferences: preferences })
     }
+    chrome.storage.local.set({ preferences: preferences })
 });
-console.log("HELL2O?")
 
+// Initiate all extensions
 for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
     await extension.init()
 }
 
+// Insert custom outlinks onto cards
 async function updateCards() {
-    const cards = document.querySelectorAll('div[data-mangabaka-id]:not(.modified)');
+    // Delete residue outlinks from previous page
+    const divsToRemove = document.querySelectorAll('.custom-insert');
+    divsToRemove.forEach(div => {
+        div.remove();
+    });
+    
+    const cards = document.querySelectorAll('div[data-mangabaka-id]');
     for (const card of cards) {
-        card.classList.add("modified")
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
             const inserts = await extension.getInserts(mangabakaId)
@@ -60480,48 +60487,6 @@ async function updateCards() {
         }
     }
 }
-
-const thisPage = window.location.href;
-async function checkForSpecials() {
-    const currentURL = window.location.href;
-
-    const contentWrapper = document.body.querySelector(".content-wrapper.svelte-eg0xkf:not(.injected)");
-    if (contentWrapper) {
-        contentWrapper.classList.add("injected");
-        const matchedPage = _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"].find(page => page.CHECK_EX.test(currentURL));
-        if (matchedPage) {
-            contentWrapper.innerHTML = await matchedPage.getPage();
-            await matchedPage.prepStuff(contentWrapper);
-        }
-    }
-
-    if (currentURL != thisPage) {
-        const matchedOldPage = _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"].find(page => page.CHECK_EX.test(thisPage));
-        if (matchedOldPage) {
-            window.location.reload();
-        }
-    }
-}
-
-let debounceTimer;
-const observer = new MutationObserver(() => {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-        let sidebar = document.querySelectorAll('.flex.w-full.min-w-0.flex-col.gap-1')[1]
-        for (const page of _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"]) {
-            page.insertSidebar(sidebar)
-        }
-        //checkForSpecials();
-        updateCards();
-    }, 100);
-});
-
-observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-});
-
-await updateCards();
 
 const script = document.createElement('script');
 script.textContent = `
@@ -60560,6 +60525,13 @@ window.addEventListener('message', async (event) => {
 });
 
 async function onUrlChange(newUrl) {
+    await updateCards()
+
+    let sidebar = document.querySelectorAll('.flex.w-full.min-w-0.flex-col.gap-1')[1]
+    for (const page of _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"]) {
+        page.insertSidebar(sidebar)
+    }
+
     const contentWrapper = document.body.querySelector(".content-wrapper.svelte-eg0xkf");
     if (!contentWrapper.classList.contains("injected")) {
         contentWrapper.classList.add("injected");
@@ -60582,7 +60554,7 @@ async function onUrlChange(newUrl) {
         }
     }
 }
-
+await onUrlChange()
 __webpack_async_result__();
 } catch(e) { __webpack_async_result__(e); } }, 1);
 
@@ -61001,12 +60973,12 @@ class BaseModule {
             chrome.storage.local.get("preferences", (result) => {
                 if (result.preferences[this.name]) {
                     const a = document.createElement('a');
-                    a.dataset.insertId = `${name}-${id}`;
+                    a.dataset.insertId = `${this.name}-${id}`;
                     a.className = "custom-insert ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-3 py-1";
                     a.href = this._makeLink(id);
                     a.target = "_blank";
                     a.rel = "noopener noreferrer";
-                    a.title = `Open on ${name}`;
+                    a.title = `Open on ${this.name}`;
 
                     const img = document.createElement('img');
                     img.className = "mr-1 size-5 bg-[_152232]";

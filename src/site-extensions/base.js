@@ -20,12 +20,12 @@ export default class BaseModule {
             chrome.storage.local.get("preferences", (result) => {
                 if (result.preferences[this.name]) {
                     const a = document.createElement('a');
-                    a.dataset.insertId = `${name}-${id}`;
+                    a.dataset.insertId = `${this.name}-${id}`;
                     a.className = "custom-insert ring-offset-background focus-visible:ring-ring inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-secondary text-secondary-foreground hover:bg-secondary/80 h-9 px-3 py-1";
                     a.href = this._makeLink(id);
                     a.target = "_blank";
                     a.rel = "noopener noreferrer";
-                    a.title = `Open on ${name}`;
+                    a.title = `Open on ${this.name}`;
 
                     const img = document.createElement('img');
                     img.className = "mr-1 size-5 bg-[_152232]";
