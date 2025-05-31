@@ -1,8 +1,9 @@
 export default class BaseModule {
 
     static FAVICON_URL = "https://example.com"
+    static STANDARD_SETTING = true
 
-    static async getInserts(mb_id) {
+    static async getInserts(mb_id,cardDiv) {
         const siteIds = this._getSiteIds(mb_id);
         const result = []
         if (siteIds){
@@ -59,7 +60,7 @@ export default class BaseModule {
     }
 
     static async openReader(mb_id) {
-        const siteId = this._getSiteId(mb_id)
+        const siteId = this._getSiteIds(mb_id)
         const reader = chrome.runtime.getURL(`./reader.html`);
         chrome.tabs.create({ url: reader, active: true });
     }

@@ -1,17 +1,15 @@
 import extensions from "./site-extensions/barrel.js";
 import customPages from "./custom-pages/barrel.js"
-
 // Add preferences to object if not preexisting
 chrome.storage.local.get("preferences", (result) => {
     const preferences = {}
     for (const extension of extensions) {
-        if (result.preferences[extension.name] == undefined) {
-            preferences[extension.name] = true
+        if (result.preferences && result.preferences[extension.name] == undefined) {
+            preferences[extension.name] = extension.STANDARD_SETTING
         }
     }
     chrome.storage.local.set({ preferences: preferences })
 });
-
 // Initiate all extensions
 for (const extension of extensions) {
     await extension.init()
@@ -32,7 +30,7 @@ async function updateCards() {
         const mangabakaId = card.getAttribute('data-mangabaka-id');
         const list = card.querySelector('.ratings-list');
         for (const extension of extensions) {
-            const inserts = await extension.getInserts(mangabakaId);
+            const inserts = await extension.getInserts(mangabakaId,card);
             for (const insert of inserts) {
                 if (!insert) continue;
                 const insertId = insert.getAttribute('data-insert-id');

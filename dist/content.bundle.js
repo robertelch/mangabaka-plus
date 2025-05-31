@@ -60442,18 +60442,16 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./custom-pages/barrel.js */ "./src/custom-pages/barrel.js");
 
 
-
 // Add preferences to object if not preexisting
 chrome.storage.local.get("preferences", (result) => {
     const preferences = {}
     for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
-        if (result.preferences[extension.name] == undefined) {
-            preferences[extension.name] = true
+        if (result.preferences && result.preferences[extension.name] == undefined) {
+            preferences[extension.name] = extension.STANDARD_SETTING
         }
     }
     chrome.storage.local.set({ preferences: preferences })
 });
-
 // Initiate all extensions
 for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
     await extension.init()
@@ -60461,65 +60459,60 @@ for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__[
 
 // Insert custom outlinks onto cards
 async function updateCards() {
+
     // Delete residue outlinks from previous page
     const divsToRemove = document.querySelectorAll('.custom-insert');
     divsToRemove.forEach(div => {
         div.remove();
     });
-    
+
+    // Create new inserts
     const cards = document.querySelectorAll('div[data-mangabaka-id]');
     for (const card of cards) {
         const mangabakaId = card.getAttribute('data-mangabaka-id');
+        const list = card.querySelector('.ratings-list');
         for (const extension of _site_extensions_barrel_js__WEBPACK_IMPORTED_MODULE_0__["default"]) {
-            const inserts = await extension.getInserts(mangabakaId)
+            const inserts = await extension.getInserts(mangabakaId,card);
             for (const insert of inserts) {
-                if (insert){
-                    const list = card.querySelector('.ratings-list');
-                    const insertId = insert.getAttribute('data-insert-id');
-                    if (insertId) {
-                        if (list.querySelector(`[data-insert-id="${insertId}"]`)) {
-                            continue;
-                        }
-                    }
-                    list.append(insert);
+                if (!insert) continue;
+                const insertId = insert.getAttribute('data-insert-id');
+                if (insertId && list.querySelector(`[data-insert-id="${insertId}"]`)) {
+                    continue;
                 }
+                list.append(insert);
             }
         }
     }
 }
 
+// Monkeypatch page redirects
 const script = document.createElement('script');
 script.textContent = `
-
-(function() {
-  const pushState = history.pushState;
-  history.pushState = function(...args) {
-    pushState.apply(history, args);
-    window.dispatchEvent(new Event('locationchange'));
+(function () {
+  const dispatchLocationChange = () => {
+    const event = new Event('locationchange');
+    window.dispatchEvent(event);
     window.postMessage({ type: 'LOCATION_CHANGE', href: window.location.href }, '*');
   };
 
-  const replaceState = history.replaceState;
-  history.replaceState = function(...args) {
-    replaceState.apply(history, args);
-    window.dispatchEvent(new Event('locationchange'));
-    window.postMessage({ type: 'LOCATION_CHANGE', href: window.location.href }, '*');
+  const wrapHistoryMethod = method => {
+    const original = history[method];
+    history[method] = function (...args) {
+      original.apply(history, args);
+      dispatchLocationChange();
+    };
   };
 
-  window.addEventListener('popstate', () => {
-    window.dispatchEvent(new Event('locationchange'));
-    window.postMessage({ type: 'LOCATION_CHANGE', href: window.location.href }, '*');
-  });
+  ['pushState', 'replaceState'].forEach(wrapHistoryMethod);
+
+  window.addEventListener('popstate', dispatchLocationChange);
 })();
-
 `;
 (document.head || document.documentElement).appendChild(script);
 script.remove();
 window.addEventListener('message', async (event) => {
   if (event.source !== window) return;
-
   if (event.data && event.data.type === 'LOCATION_CHANGE') {
-    console.log('Content script received URL change:', event.data.href);
     await onUrlChange(event.data.href);
   }
 });
@@ -60527,11 +60520,13 @@ window.addEventListener('message', async (event) => {
 async function onUrlChange(newUrl) {
     await updateCards()
 
+    // Insert custom sidebar icons
     let sidebar = document.querySelectorAll('.flex.w-full.min-w-0.flex-col.gap-1')[1]
     for (const page of _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"]) {
         page.insertSidebar(sidebar)
     }
 
+    // Create wrapper for injected pages
     const contentWrapper = document.body.querySelector(".content-wrapper.svelte-eg0xkf");
     if (!contentWrapper.classList.contains("injected")) {
         contentWrapper.classList.add("injected");
@@ -60539,19 +60534,20 @@ async function onUrlChange(newUrl) {
         wrapper.id = "injectionWrapper";
         contentWrapper.parentElement.appendChild(wrapper);
     }
+
+    // Checks for and, if applicable, injects the fitting custom page
     const injectionWrapper = document.body.querySelector("#injectionWrapper")
     if (contentWrapper) {
         const matchedPage = _custom_pages_barrel_js__WEBPACK_IMPORTED_MODULE_1__["default"].find(page => page.CHECK_EX.test(newUrl));
-        if (matchedPage) {
-            contentWrapper.hidden = true
-            injectionWrapper.hidden = false
-            injectionWrapper.innerHTML = await matchedPage.getPage();
-            await matchedPage.prepStuff(injectionWrapper);
-        }
-        else {
+        if (!matchedPage) {
             contentWrapper.hidden = false
             injectionWrapper.hidden = true
+            return
         }
+        contentWrapper.hidden = true
+        injectionWrapper.hidden = false
+        injectionWrapper.innerHTML = await matchedPage.getPage();
+        await matchedPage.prepStuff(injectionWrapper);
     }
 }
 await onUrlChange()
@@ -60802,6 +60798,48 @@ class Comick extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
 /***/ }),
 
+/***/ "./src/site-extensions/MalSync/index.js":
+/*!**********************************************!*\
+  !*** ./src/site-extensions/MalSync/index.js ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ MalSync)
+/* harmony export */ });
+/* harmony import */ var _base_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base.js */ "./src/site-extensions/base.js");
+
+
+class MalSync extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+
+    static FAVICON_URL = "https://malsync.moe/favicon.ico"
+    static STANDARD_SETTING = false
+
+    static async getInserts(mb_id,cardDiv) {
+        const malId = cardDiv.querySelector('[data-mangabaka-source="my-anime-list"]')
+        if (malId) {
+            const rating = malId.textContent
+            const id = malId.dataset.mangabakaSourceId
+            const insert = await this._getInsertPrivate(id, rating)
+            return [insert]
+        }
+        return []
+    }
+
+    static async init() {}
+
+    static _makeLink(id) {
+        return `https://malsync.moe/pwa/#/manga/${id}`
+    }
+
+    static async _getRating(id) {
+        return "-"
+    }
+}
+
+/***/ }),
+
 /***/ "./src/site-extensions/MangaFire/index.js":
 /*!************************************************!*\
   !*** ./src/site-extensions/MangaFire/index.js ***!
@@ -60849,6 +60887,34 @@ class MangaFox extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
 
     static _makeLink(id) {
         return id
+    }
+
+    static async _getRating(id) {
+        return "-"
+    }
+}
+
+/***/ }),
+
+/***/ "./src/site-extensions/MangaHub/index.js":
+/*!***********************************************!*\
+  !*** ./src/site-extensions/MangaHub/index.js ***!
+  \***********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ MangaHub)
+/* harmony export */ });
+/* harmony import */ var _base_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../base.js */ "./src/site-extensions/base.js");
+
+
+class MangaHub extends _base_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+
+    static FAVICON_URL = "https://mangahub.io/favicon-32x32.png"
+
+    static _makeLink(id) {
+        return `https://mangahub.io/manga/${id}`
     }
 
     static async _getRating(id) {
@@ -60926,10 +60992,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _MangaReader__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MangaReader */ "./src/site-extensions/MangaReader/index.js");
 /* harmony import */ var _MangaNato__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./MangaNato */ "./src/site-extensions/MangaNato/index.js");
-/* harmony import */ var _MangaFox__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./MangaFox */ "./src/site-extensions/MangaFox/index.js");
-/* harmony import */ var _MangaFire__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./MangaFire */ "./src/site-extensions/MangaFire/index.js");
-/* harmony import */ var _Comick__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./Comick */ "./src/site-extensions/Comick/index.js");
-/* harmony import */ var _BatoTo__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./BatoTo */ "./src/site-extensions/BatoTo/index.js");
+/* harmony import */ var _MangaHub__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./MangaHub */ "./src/site-extensions/MangaHub/index.js");
+/* harmony import */ var _MangaFox__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./MangaFox */ "./src/site-extensions/MangaFox/index.js");
+/* harmony import */ var _MangaFire__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./MangaFire */ "./src/site-extensions/MangaFire/index.js");
+/* harmony import */ var _MalSync__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./MalSync */ "./src/site-extensions/MalSync/index.js");
+/* harmony import */ var _Comick__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./Comick */ "./src/site-extensions/Comick/index.js");
+/* harmony import */ var _BatoTo__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./BatoTo */ "./src/site-extensions/BatoTo/index.js");
 
 
 
@@ -60937,7 +61005,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ([_MangaReader__WEBPACK_IMPORTED_MODULE_0__["default"],_MangaNato__WEBPACK_IMPORTED_MODULE_1__["default"],_MangaFox__WEBPACK_IMPORTED_MODULE_2__["default"],_MangaFire__WEBPACK_IMPORTED_MODULE_3__["default"],_Comick__WEBPACK_IMPORTED_MODULE_4__["default"],_BatoTo__WEBPACK_IMPORTED_MODULE_5__["default"]]);
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ([_MangaReader__WEBPACK_IMPORTED_MODULE_0__["default"],_MangaNato__WEBPACK_IMPORTED_MODULE_1__["default"],_MangaHub__WEBPACK_IMPORTED_MODULE_2__["default"],_MangaFox__WEBPACK_IMPORTED_MODULE_3__["default"],_MangaFire__WEBPACK_IMPORTED_MODULE_4__["default"],_MalSync__WEBPACK_IMPORTED_MODULE_5__["default"],_Comick__WEBPACK_IMPORTED_MODULE_6__["default"],_BatoTo__WEBPACK_IMPORTED_MODULE_7__["default"]]);
 
 /***/ }),
 
@@ -60954,8 +61024,9 @@ __webpack_require__.r(__webpack_exports__);
 class BaseModule {
 
     static FAVICON_URL = "https://example.com"
+    static STANDARD_SETTING = true
 
-    static async getInserts(mb_id) {
+    static async getInserts(mb_id,cardDiv) {
         const siteIds = this._getSiteIds(mb_id);
         const result = []
         if (siteIds){
@@ -61012,7 +61083,7 @@ class BaseModule {
     }
 
     static async openReader(mb_id) {
-        const siteId = this._getSiteId(mb_id)
+        const siteId = this._getSiteIds(mb_id)
         const reader = chrome.runtime.getURL(`./reader.html`);
         chrome.tabs.create({ url: reader, active: true });
     }
