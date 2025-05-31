@@ -30,11 +30,16 @@ const bundledReaders = readerFiles.reduce((entries, filePath) => {
 path.resolve(__dirname, 'dist')
 const manifest = {
   "manifest_version": 3,
-  "name": "JSON Search Injector",
+  "name": "MangaBaka+",
   "version": "1.0",
-  "description": "Injects content and searches JSON",
+  "description": "Upgrades mangabaka.dev by adding new features such as outlinks to different new sites",
   "host_permissions": ["https://mangabaka.dev/*"],
   "permissions": ["tabs","storage"],
+  "browser_specific_settings": {
+  "gecko": {
+      "id": "mangabakaplus@crumbling.solania.de"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["https://mangabaka.dev/*"],
